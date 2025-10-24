@@ -9,7 +9,7 @@ import json
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
-
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -20,6 +20,20 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI(title="Modular AI Diet Recommendation API")
+
+# Allow CORS
+origins = [
+    "http://localhost:5173",  # frontend origin
+    "https://symptmeal-pro.vercel.app",  # in case Vite uses this
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # or ["*"] for all origins (not recommended for production)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 print("[SERVER STARTUP] Loading all models into memory...")
 disease_model = tf.keras.models.load_model("model/disease_predictor_model.h5")
@@ -187,6 +201,7 @@ You are an expert Indian nutritionist. Your task is to create a personalized, fu
 # --- API ENDPOINT 1: Predict Diet Type ---
 @app.post("/predict-diet-type")
 def predict_diet_type_endpoint(input_data: DietTypeInput):
+    print(f"\n[API 1] Input to Diet Type Predictor -> User Prompt: '{input_data.prompt}'")
     try:
         print("\n" + "="*50)
         print(f"🚀 New Request for Diet Type Prediction. User Prompt: '{input_data.prompt}'")
